@@ -4,17 +4,64 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+
+	"github.com/tidwall/gjson"
 )
 
 func main() {
-	authToken := ""
-	user := ""
-	playlist := ""
+
+	// var albums []string
+	// var artists []string
+	// var songs []string
+
+	// define the necessary info (user, playlistID and auth token) on the command line
+	args := os.Args[1:] // skip the ./main part
+	user := args[0]
+	playlist := args[1]
+	authToken := args[2]
+
+	//
+	//
+	//- getTracks()
+	// tracks.add(newTracks)
+	// if (size == 100) {
+	// 	offset = 100
+	// 	while (size == 100) {
+	// 		getTracks(urlWithOffset)
+	// 		tracks.add(newTracks)
+	// 		offset += 100
+	// 	}
+	// }
+	//
+	//
+
 	offset := 0
+	fields := "items(track(name%2Cartists(name)%2Calbum(name)))%2Ctotal" // extract song name, album name, artists only. Also total number of songs
+	url := fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists/%s/tracks?fields=%s&limit=100&offset=%v", user, playlist, fields, offset)
+	body := getAPIEndpoint(url, authToken)
 
-	url := fmt.Sprintf("https://api.spotify.com/v1/users/%s/playlists/%s/tracks?limit=100&offset=%v", user, playlist, offset)
+	json := string(body)
+	// total := gjson.Get(json, "total")
+	currentAmount := int(gjson.Get(json, "items.#").Num)
 
-	// ioutil.WriteFile("dump.json", body, 0600)
+	for i := 0; i < currentAmount; i++ {
+		track := gjson.Get(json, fmt.Sprintf("items.%v.track", i)).String()
+
+		album := gjson.Get(track, "album.name").Str
+		songName := gjson.Get(track, "name").Str
+
+		var artists []string
+		artistArray := gjson.Get(track, "artists")
+		for artistIndex := 0; artistIndex < len(artistArray.Array()); artistIndex++ {
+			currentArtist := gjson.Get(artistArray.String(), fmt.Sprintf("%v.name", artistIndex))
+			artists = append(artists, currentArtist.String())
+		}
+		fmt.Printf("%s   -   %s     in    %s \n", artists, songName, album)
+
+	}
+	// tracks = append(tracksForOutput, items...)
+
 	fmt.Println("Export successful")
 }
 
