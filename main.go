@@ -79,6 +79,9 @@ func getAPIEndpoint(url string, authToken string) []byte {
 	req.Header.Add("Authorization", authHeader)
 
 	resp, errGetResponse := client.Do(req)
+	if resp.StatusCode != 200 {
+		panic(resp.StatusCode)
+	}
 	if errGetResponse != nil {
 		panic(errGetResponse)
 	}
