@@ -57,6 +57,7 @@ func main() {
 	defer file.Close()
 
 	for i := 0; i < total; i++ {
+		// split up the array of artists on each individual song into one string
 		var artist string
 		for aIndex := 0; aIndex < len(artists[i]); aIndex++ {
 			artist = artist + " " + artists[i][aIndex]
@@ -71,6 +72,8 @@ func main() {
 }
 
 func extractSongData(body []byte, songArray *[]string, albumArray *[]string, artistArray *[][]string) {
+	// takes in the json data from the Spotify API endpoint and appends the
+	// song name, album name and artists to their respective arrays.
 	json := string(body)
 
 	trackCount := int(gjson.Get(json, "items.#").Num)
